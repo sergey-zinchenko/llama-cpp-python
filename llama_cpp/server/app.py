@@ -311,6 +311,12 @@ async def handle_completion_request(request: Request, request_body: CreateComple
     tags=[openai_v1_tag],
 )
 @router.post(
+    "/openai/deployments/{deployment_id}/completions",
+    dependencies=[Depends(authenticate)],
+    include_in_schema=False,
+    tags=[openai_v1_tag],
+)
+@router.post(
     "/v1/engines/copilot-codex/completions",
     include_in_schema=False,
     dependencies=[Depends(authenticate)],
@@ -320,7 +326,11 @@ async def create_completion(
         request: Request,
         body: CreateCompletionRequest,
         llama_proxy_context_manager: LlamaProxyContextManager = Depends(get_llama_proxy_context_manager),
+        deployment_id: Optional[str] = None
 ) -> llama_cpp.Completion:
+    if deployment_id is not None:
+        body.model = deployment_id
+
     if isinstance(body.prompt, list):
         assert len(body.prompt) <= 1
         body.prompt = body.prompt[0] if len(body.prompt) > 0 else ""
@@ -348,13 +358,19 @@ async def create_completion(
     dependencies=[Depends(authenticate)],
     tags=[openai_v1_tag],
 )
+@router.post(
+    "/openai/deployments/{deployment_id}/embeddings",
+    include_in_schema=False,
+    dependencies=[Depends(authenticate)],
+)
 async def create_embedding(
         request: CreateEmbeddingRequest,
         llama_proxy_context: LlamaProxyContextManager = Depends(get_llama_proxy_context_manager),
+        deployment_id: Optional[str] = None
 ):
     async with llama_proxy_context as llama_proxy:
         return await run_in_threadpool(
-            llama_proxy(request.model).create_embedding,
+            llama_proxy(deployment_id if deployment_id is not None else request.model).create_embedding,
             **request.model_dump(exclude={"user"}),
         )
 
@@ -393,6 +409,11 @@ async def create_embedding(
         }
     },
     tags=[openai_v1_tag],
+)
+@router.post(
+    "/openai/deployments/{deployment_id}/chat/completions",
+    include_in_schema=False,
+    dependencies=[Depends(authenticate)]
 )
 async def create_chat_completion(
         request: Request,
@@ -467,6 +488,7 @@ async def create_chat_completion(
             }
         ),
         llama_proxy_context_manager: LlamaProxyContextManager = Depends(get_llama_proxy_context_manager),
+        deployment_id: Optional[str] = None
 ) -> llama_cpp.ChatCompletion:
     exclude = {
         "n",
@@ -475,7 +497,7 @@ async def create_chat_completion(
         "min_tokens",
     }
 
-    model_name = body.model
+    model_name = deployment_id if deployment_id is not None else body.model
 
     method = llama_cpp.Llama.create_chat_completion
 
@@ -489,6 +511,11 @@ async def create_chat_completion(
     summary="Models",
     dependencies=[Depends(authenticate)],
     tags=[openai_v1_tag],
+)
+@router.get(
+    "/openai/models",
+    dependencies=[Depends(authenticate)],
+    include_in_schema= False
 )
 async def get_models(
         llama_proxy_context_manager: LlamaProxyContextManager = Depends(get_llama_proxy_context_manager),
