@@ -36,6 +36,7 @@ server = [
     "sse-starlette>=1.6.1",
     "starlette-context>=0.3.6,<0.4",
     "PyYAML>=5.1",
+    "transformers>=4.42.3"
 ]
 test = [
     "pytest>=7.4.0",
