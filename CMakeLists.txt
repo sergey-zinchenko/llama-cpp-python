@@ -68,6 +68,15 @@ if (LLAMA_BUILD)
     )
 
     install(
+        TARGETS llama_common
+        LIBRARY DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/llama_cpp
+        RUNTIME DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/llama_cpp
+        ARCHIVE DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/llama_cpp
+        FRAMEWORK DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/llama_cpp
+        RESOURCE DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/llama_cpp
+    )
+
+    install(
         TARGETS llama 
         LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/llama_cpp
         RUNTIME DESTINATION ${SKBUILD_PLATLIB_DIR}/llama_cpp
