@@ -28,16 +28,19 @@ class _LlamaModel:
     NOTE: For stability it's recommended you use the Llama class instead."""
 
     _llama_free_model = None
+
     # NOTE: this must be "saved" here to avoid exceptions when calling __del__
 
     def __init__(
-        self,
-        *,
-        path_model: str,
-        params: llama_cpp.llama_model_params,
-        verbose: bool = True,
+            self,
+            *,
+            path_model: str,
+            model_url: Optional[str],
+            params: llama_cpp.llama_model_params,
+            verbose: bool = True,
     ):
         self.path_model = path_model
+        self.model_url = model_url
         self.params = params
         self.verbose = verbose
 
@@ -45,13 +48,17 @@ class _LlamaModel:
 
         self.model = None
 
-        if not os.path.exists(path_model):
-            raise ValueError(f"Model path does not exist: {path_model}")
-
         with suppress_stdout_stderr(disable=verbose):
-            self.model = llama_cpp.llama_load_model_from_file(
-                self.path_model.encode("utf-8"), self.params
-            )
+            if model_url is not None:
+                self.model = llama_cpp.llama_load_model_from_url(
+                    model_url.encode("utf-8"), self.path_model.encode("utf-8"), self.params
+                )
+            else:
+                if not os.path.exists(path_model):
+                    raise ValueError(f"Model path does not exist: {path_model}")
+                self.model = llama_cpp.llama_load_model_from_file(
+                    self.path_model.encode("utf-8"), self.params
+                )
 
         if self.model is None:
             raise ValueError(f"Failed to load model from file: {path_model}")
@@ -100,11 +107,11 @@ class _LlamaModel:
         return llama_cpp.llama_get_model_tensor(self.model, name.encode("utf-8"))
 
     def apply_lora_from_file(
-        self,
-        lora_path: str,
-        scale: float,
-        path_base_model: Optional[str],
-        n_threads: int,
+            self,
+            lora_path: str,
+            scale: float,
+            path_base_model: Optional[str],
+            n_threads: int,
     ):
         assert self.model is not None
         return llama_cpp.llama_model_apply_lora_from_file(
@@ -252,11 +259,11 @@ class _LlamaContext:
     _llama_free = None
 
     def __init__(
-        self,
-        *,
-        model: _LlamaModel,
-        params: llama_cpp.llama_context_params,
-        verbose: bool = True,
+            self,
+            *,
+            model: _LlamaModel,
+            params: llama_cpp.llama_context_params,
+            verbose: bool = True,
     ):
         self.model = model
         self.params = params
@@ -352,13 +359,13 @@ class _LlamaContext:
         llama_cpp.llama_set_rng_seed(self.ctx, seed)
 
     def sample_repetition_penalties(
-        self,
-        candidates: "_LlamaTokenDataArray",
-        last_tokens_data: "llama_cpp.Array[llama_cpp.llama_token]",
-        penalty_last_n: int,
-        penalty_repeat: float,
-        penalty_freq: float,
-        penalty_present: float,
+            self,
+            candidates: "_LlamaTokenDataArray",
+            last_tokens_data: "llama_cpp.Array[llama_cpp.llama_token]",
+            penalty_last_n: int,
+            penalty_repeat: float,
+            penalty_freq: float,
+            penalty_present: float,
     ):
         assert self.ctx is not None
         llama_cpp.llama_sample_repetition_penalties(
@@ -397,7 +404,7 @@ class _LlamaContext:
         )
 
     def sample_tail_free(
-        self, candidates: "_LlamaTokenDataArray", z: float, min_keep: int
+            self, candidates: "_LlamaTokenDataArray", z: float, min_keep: int
     ):
         assert self.ctx is not None
         llama_cpp.llama_sample_tail_free(
@@ -405,7 +412,7 @@ class _LlamaContext:
         )
 
     def sample_typical(
-        self, candidates: "_LlamaTokenDataArray", p: float, min_keep: int
+            self, candidates: "_LlamaTokenDataArray", p: float, min_keep: int
     ):
         assert self.ctx is not None
         llama_cpp.llama_sample_typical(
@@ -428,12 +435,12 @@ class _LlamaContext:
         )
 
     def sample_token_mirostat(
-        self,
-        candidates: "_LlamaTokenDataArray",
-        tau: float,
-        eta: float,
-        m: int,
-        mu: llama_cpp.CtypesPointerOrRef[ctypes.c_float],
+            self,
+            candidates: "_LlamaTokenDataArray",
+            tau: float,
+            eta: float,
+            m: int,
+            mu: llama_cpp.CtypesPointerOrRef[ctypes.c_float],
     ) -> int:
         assert self.ctx is not None
         return llama_cpp.llama_sample_token_mirostat(
@@ -446,7 +453,8 @@ class _LlamaContext:
         )
 
     def sample_token_mirostat_v2(
-        self, candidates: "_LlamaTokenDataArray", tau: float, eta: float, mu: llama_cpp.CtypesPointerOrRef[ctypes.c_float]
+            self, candidates: "_LlamaTokenDataArray", tau: float, eta: float,
+            mu: llama_cpp.CtypesPointerOrRef[ctypes.c_float]
     ) -> int:
         assert self.ctx is not None
         return llama_cpp.llama_sample_token_mirostat_v2(
@@ -496,7 +504,7 @@ class _LlamaBatch:
     _llama_batch_free = None
 
     def __init__(
-        self, *, n_tokens: int, embd: int, n_seq_max: int, verbose: bool = True
+            self, *, n_tokens: int, embd: int, n_seq_max: int, verbose: bool = True
     ):
         self._n_tokens = n_tokens
         self.embd = embd
@@ -564,7 +572,7 @@ class _LlamaTokenDataArray:
             size=self.n_vocab,
             sorted=False,
         )
-        self.default_candidates_data_id = np.arange(self.n_vocab, dtype=np.intc) # type: ignore
+        self.default_candidates_data_id = np.arange(self.n_vocab, dtype=np.intc)  # type: ignore
         self.default_candidates_data_p = np.zeros(self.n_vocab, dtype=np.single)
 
     def copy_logits(self, logits: npt.NDArray[np.single]):
@@ -627,7 +635,7 @@ def _detokenize_spm(model: _LlamaModel, tokens: List[int]) -> str:
     for i, token in enumerate(tokens):
         piece = _token_to_piece(model, token)
         if (
-            (tokens[0] == bos_id and i == 1) or (tokens[0] != bos_id and i == 0)
+                (tokens[0] == bos_id and i == 1) or (tokens[0] != bos_id and i == 0)
         ) and piece[0] == " ":
             piece = piece[1:]
         result += piece
@@ -725,7 +733,7 @@ class _LlamaSamplingContext:
         return ctx_main.model.detokenize(self.prev[-n:]).decode("utf-8")
 
     def sample(
-        self, ctx_main: _LlamaContext, idx: int = 0, logits_array: Optional[npt.NDArray[np.single]] = None
+            self, ctx_main: _LlamaContext, idx: int = 0, logits_array: Optional[npt.NDArray[np.single]] = None
     ):
         n_vocab = ctx_main.model.n_vocab()
         id: int = 0

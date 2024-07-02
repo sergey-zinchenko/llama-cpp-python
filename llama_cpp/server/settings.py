@@ -21,6 +21,12 @@ class ModelSettings(BaseSettings):
     model: str = Field(
         description="The path to the model to use for generating completions."
     )
+
+    model_url: Optional[str] = Field(
+        default=None,
+        description="The URL to the model to use for generating completions."
+    )
+
     model_alias: Optional[str] = Field(
         default=None,
         description="The alias of the model to use for generating completions.",

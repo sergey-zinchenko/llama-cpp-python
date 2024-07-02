@@ -215,6 +215,7 @@ class LlamaProxy:
         else:
             create_fn = llama_cpp.Llama
             kwargs["model_path"] = settings.model
+            kwargs["model_url"] = settings.model_url
 
         _model = create_fn(
             **kwargs,

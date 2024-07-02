@@ -1169,6 +1169,22 @@ def llama_load_model_from_file(
     path_model: bytes, params: llama_model_params, /
 ) -> Optional[llama_model_p]: ...
 
+# LLAMA_API struct llama_model * llama_load_model_from_url(
+#         const char * model_url,
+#         const char * path_model,
+#         const struct llama_model_params & params) {
+
+
+@ctypes_function(
+    "llama_load_model_from_url",
+    [ctypes.c_char_p, ctypes.c_char_p, llama_model_params],
+    llama_model_p_ctypes,
+)
+def llama_load_model_from_url(
+        model_url: bytes,
+        path_model: bytes, params: llama_model_params, /
+) -> Optional[llama_model_p]: ...
+
 
 # LLAMA_API void llama_free_model(struct llama_model * model);
 @ctypes_function(

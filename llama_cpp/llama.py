@@ -66,6 +66,7 @@ class Llama:
     def __init__(
         self,
         model_path: str,
+        model_url: Optional[str] = None,
         *,
         # Model Params
         n_gpu_layers: int = 0,
@@ -343,11 +344,8 @@ class Llama:
         self.lora_scale = lora_scale
         self.lora_path = lora_path
 
-        if not os.path.exists(model_path):
-            raise ValueError(f"Model path does not exist: {model_path}")
-
         self._model = _LlamaModel(
-            path_model=self.model_path, params=self.model_params, verbose=self.verbose
+            path_model=self.model_path, model_url=model_url, params=self.model_params, verbose=self.verbose
         )
 
         # Override tokenizer
