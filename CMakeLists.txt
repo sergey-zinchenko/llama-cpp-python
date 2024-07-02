@@ -23,6 +23,50 @@ if (LLAMA_BUILD)
     endif()
 
     add_subdirectory(vendor/llama.cpp)
+
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+
+    find_package(Threads REQUIRED)
+    include(CheckCXXCompilerFlag)
+
+
+    add_library(llama_common SHARED)
+    set(COMMON_PATH "vendor/llama.cpp/common")
+
+    # Use curl to download model url
+    if (LLAMA_CURL)
+        find_package(CURL REQUIRED)
+        add_definitions(-DLLAMA_USE_CURL)
+        find_library(CURL_LIBRARY curl REQUIRED)
+    endif ()
+
+    get_target_property(COMMON_SOURCES common SOURCES)
+    set(MODIFIED_COMMON_SOURCES "")
+
+    foreach(SOURCE ${COMMON_SOURCES})
+        list(APPEND MODIFIED_COMMON_SOURCES "${COMMON_PATH}/${SOURCE}")
+    endforeach()
+
+    target_sources(llama_common PRIVATE ${MODIFIED_COMMON_SOURCES})
+
+    get_target_property(COMMON_COMPILE_FEATURES common INTERFACE_COMPILE_FEATURES)
+    target_compile_features(llama_common PUBLIC ${COMMON_COMPILE_FEATURES})
+
+    get_target_property(COMMON_INCLUDE_DIRECTORIES common INTERFACE_INCLUDE_DIRECTORIES)
+    target_include_directories(llama_common PUBLIC ${COMMON_INCLUDE_DIRECTORIES})
+
+    get_target_property(COMMON_LINK_LIBRARIES common INTERFACE_LINK_LIBRARIES)
+    target_link_libraries(llama_common PRIVATE ${COMMON_LINK_LIBRARIES})
+
+    install(
+        TARGETS llama_common
+        LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/llama_cpp
+        RUNTIME DESTINATION ${SKBUILD_PLATLIB_DIR}/llama_cpp
+        ARCHIVE DESTINATION ${SKBUILD_PLATLIB_DIR}/llama_cpp
+        FRAMEWORK DESTINATION ${SKBUILD_PLATLIB_DIR}/llama_cpp
+        RESOURCE DESTINATION ${SKBUILD_PLATLIB_DIR}/llama_cpp
+    )
+
     install(
         TARGETS llama 
         LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/llama_cpp

@@ -78,10 +78,11 @@ def _load_shared_library(lib_base_name: str):
 
 # Specify the base name of the shared library to load
 _lib_base_name = "llama"
+_common_lib_base_name = "llama_common"
 
 # Load the library
 _lib = _load_shared_library(_lib_base_name)
-
+_common_lib = _load_shared_library(_common_lib_base_name)
 
 # ctypes sane type hint helpers
 #
@@ -132,6 +133,7 @@ def ctypes_function_for_shared_library(lib: ctypes.CDLL):
 
 
 ctypes_function = ctypes_function_for_shared_library(_lib)
+ctypes_function_common = ctypes_function_for_shared_library(_common_lib)
 
 
 def byref(obj: CtypesCData, offset: Optional[int] = None) -> CtypesRef[CtypesCData]:
@@ -1175,7 +1177,7 @@ def llama_load_model_from_file(
 #         const struct llama_model_params & params) {
 
 
-@ctypes_function(
+@ctypes_function_common(
     "llama_load_model_from_url",
     [ctypes.c_char_p, ctypes.c_char_p, llama_model_params],
     llama_model_p_ctypes,
