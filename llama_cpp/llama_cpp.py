@@ -1171,7 +1171,7 @@ def llama_load_model_from_file(
     path_model: bytes, params: llama_model_params, /
 ) -> Optional[llama_model_p]: ...
 
-# LLAMA_API struct llama_model * llama_load_model_from_url(
+# struct llama_model * llama_load_model_from_url(
 #         const char * model_url,
 #         const char * path_model,
 #         const struct llama_model_params & params) {
