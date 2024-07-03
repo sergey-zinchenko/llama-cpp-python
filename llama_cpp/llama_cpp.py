@@ -1178,7 +1178,7 @@ def llama_load_model_from_file(
 
 
 @ctypes_function_common(
-    "llama_load_model_from_url",
+    "_Z25llama_load_model_from_urlPKcS0_RK18llama_model_params",
     [ctypes.c_char_p, ctypes.c_char_p, llama_model_params],
     llama_model_p_ctypes,
 )
