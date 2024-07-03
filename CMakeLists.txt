@@ -58,6 +58,16 @@ if (LLAMA_BUILD)
     get_target_property(COMMON_LINK_LIBRARIES common INTERFACE_LINK_LIBRARIES)
     target_link_libraries(llama_common PRIVATE ${COMMON_LINK_LIBRARIES})
 
+    set_target_properties(llama_common PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+    if (WIN32)
+        add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+
+        if (BUILD_SHARED_LIBS)
+            set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+        endif()
+    endif()
+
     install(
         TARGETS llama_common
         LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/llama_cpp
